@@ -1,0 +1,72 @@
+service: primera-api
+frameworkVersion: "3"
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${env:AWS_REGION}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - arn:aws:dynamodb:${env:AWS_REGION}:${env:AWS_USER_ID}:table/${env:AWS_TABLE_NAME}
+
+functions:
+  api:
+    handler: src/index.handler
+    events:
+      - httpApi:
+          path: /
+          method: get
+  addTask:
+    handler: src/task.addTask
+    events:
+      - httpApi:
+          path: /tasks
+          method: post
+  getAllTasks:
+    handler: src/getAllTasks.getAllTasks
+    events:
+      - httpApi:
+          path: /tasks
+          method: get
+  getTaskById:
+    handler: src/getTaskById.getTaskById
+    events:
+      - httpApi:
+          path: /tasks/{idTask}
+          method: get
+  updateTask:
+    handler: src/updateTask.updateTask
+    events:
+      - httpApi:
+          path: /tasks/{idTask}
+          method: put
+  deleteTask:
+    handler: src/deleteTask.deleteTask
+    events:
+      - httpApi:
+          path: /tasks/{idTask}
+          method: delete
+
+resources:
+  Resources:
+    PruebaTabla:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:AWS_TABLE_NAME}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
